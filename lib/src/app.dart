@@ -13,8 +13,9 @@ import 'package:go_router/go_router.dart';
 
 class MyApp extends StatelessWidget {
   final LoginUseCase loginUseCase;
+  final String? savedToken;
 
-  const MyApp({super.key, required this.loginUseCase});
+  const MyApp({super.key, required this.loginUseCase, required this.savedToken});
 
   @override
   Widget build(BuildContext context) {
@@ -23,14 +24,14 @@ class MyApp extends StatelessWidget {
     final postRepository = PostRepositoryImpl(postRemoteDataSource);
 
     final router = GoRouter(
-      initialLocation: '/',
+      initialLocation: savedToken == null ? "/" : "/post",
       routes: [
         GoRoute(path: '/', name: 'login', builder: (context, state) => LoginPage()),
         GoRoute(
           path: '/post',
           name: 'post',
           builder: (context, state){
-            final token = state.extra as String?;
+            final token = (state.extra ?? savedToken) as String?;
             if (token == null) {
                 // handle error or redirect to login
                 return const LoginPage();
@@ -47,7 +48,7 @@ class MyApp extends StatelessWidget {
 
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (_) => AuthBloc(loginUseCase)),
+        BlocProvider(create: (_) => AuthBloc(loginUseCase, savedToken)),
         BlocProvider(create: (_) => PostBloc(GetPostsUseCase(postRepository))),
       ],
       child: MaterialApp.router(

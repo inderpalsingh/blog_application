@@ -14,7 +14,7 @@ class AuthLoading extends AuthState {}
 
 class AuthSuccess extends AuthState {
   final String accessToken;
-  final UserEntity user;
+  final UserEntity? user;
 
 
   const AuthSuccess(this.user,this.accessToken);

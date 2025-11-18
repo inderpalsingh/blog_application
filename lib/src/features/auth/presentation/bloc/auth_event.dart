@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+class AppStarted extends AuthEvent {}
+
 abstract class AuthEvent extends Equatable {
   const AuthEvent();
 

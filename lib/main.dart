@@ -12,6 +12,7 @@ void main() async {
 
   // Manual dependency initialization
   final storage = LocalStorage();
+  final savedToken = await storage.getToken();
   final dio = DioClient.create(storage);
 // AUTH
   final authRemote = AuthRemoteDataSource(dio);
@@ -20,5 +21,10 @@ void main() async {
 
 
 
-  runApp(MyApp(loginUseCase: loginUseCase));
+  runApp(
+    MyApp(
+      loginUseCase: loginUseCase,
+      savedToken: savedToken
+    ),
+  );
 }

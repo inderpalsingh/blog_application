@@ -38,7 +38,13 @@ class PostsPage extends StatelessWidget {
             return const SizedBox();
           },
         ),
+        floatingActionButton: FloatingActionButton.small(
+          child: Icon(Icons.add),
+          onPressed: (){}
+          ),
+
       ),
+
     );
   }
 }

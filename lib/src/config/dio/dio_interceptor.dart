@@ -11,6 +11,7 @@ class AppInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
     final token = await localStorage.getToken();
+    print("Storage token : $token");
 
     if (token != null) {
       options.headers['Authorization'] = 'Bearer $token';

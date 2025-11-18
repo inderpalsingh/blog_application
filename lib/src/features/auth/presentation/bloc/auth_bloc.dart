@@ -1,3 +1,4 @@
+import 'package:blog_application/src/core/storage/local_storage.dart';
 import 'package:blog_application/src/features/auth/domain/entities/auth_response_entity.dart';
 import 'package:blog_application/src/features/auth/domain/usecases/login_usecase.dart';
 import 'package:blog_application/src/features/auth/presentation/bloc/auth_event.dart';
@@ -6,12 +7,15 @@ import 'package:blog_application/src/features/auth/presentation/bloc/auth_state.
 import 'package:blog_application/src/core/errors/failures.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LoginUseCase loginUseCase;
+  final String? savedToken;
 
-  AuthBloc(this.loginUseCase) : super(AuthInitial()) {
+  AuthBloc(this.loginUseCase, this.savedToken) : super(AuthInitial()) {
     on<LoginEvent>(_onLoginEvent);
+    on<AppStarted>(_onAppStarted);
   }
 
   Future<void> _onLoginEvent(LoginEvent event, Emitter<AuthState> emit) async {
@@ -20,8 +24,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final Either<Failure, AuthResponseEntity> result = await loginUseCase(event.email, event.password);
 
     result.fold((failure) => emit(AuthError(_mapFailureToMessage(failure))),
-      (authResponse) => emit(AuthSuccess(authResponse.user, authResponse.accessToken)));
+     (authResponse) => emit(AuthSuccess(authResponse.user, authResponse.accessToken)));
   }
+
+  Future<void> _onAppStarted(AppStarted event, Emitter<AuthState> emit) async {
+  if (savedToken != null) {
+    emit(AuthSuccess(null, savedToken!));
+  }
+}
 
   String _mapFailureToMessage(Failure failure) {
     if (failure is ServerFailure) return failure.message;
