@@ -3,7 +3,7 @@ class UserEntity {
   final String name;
   final String email;
   final String password;
-  final int? age;
+  final int age;
   final String gender;
 
   const UserEntity({

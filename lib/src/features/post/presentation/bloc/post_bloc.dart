@@ -6,11 +6,12 @@ import '../../domain/usecases/get_posts_usecase.dart';
 class PostBloc extends Bloc<PostEvent, PostState> {
   final GetPostsUseCase getPosts;
 
+
   PostBloc(this.getPosts) : super(PostInitial()) {
     on<LoadPostsEvent>((event, emit) async {
       emit(PostLoading());
       try {
-        final posts = await getPosts();
+        final posts = await getPosts(event.token);
         emit(PostLoaded(posts));
       } catch (e) {
         emit(PostError(e.toString()));

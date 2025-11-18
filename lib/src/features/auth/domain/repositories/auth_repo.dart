@@ -1,7 +1,7 @@
 import 'package:blog_application/src/core/errors/failures.dart';
+import 'package:blog_application/src/features/auth/domain/entities/auth_response_entity.dart';
 import 'package:dartz/dartz.dart';
-import '../entities/user_entity.dart';
 
 abstract class AuthRepository {
-  Future<Either<Failure, UserEntity>> login(String email, String password);
+  Future<Either<Failure, AuthResponseEntity>> login(String email, String password);
 }

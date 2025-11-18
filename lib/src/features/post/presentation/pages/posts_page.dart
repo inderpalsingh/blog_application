@@ -5,12 +5,13 @@ import '../bloc/post_event.dart';
 import '../bloc/post_state.dart';
 
 class PostsPage extends StatelessWidget {
-  const PostsPage({super.key});
+  final String token;
+  const PostsPage({super.key, required this.token});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => context.read<PostBloc>()..add(LoadPostsEvent()),
+      create: (_) => context.read<PostBloc>()..add(LoadPostsEvent(token)),
       child: Scaffold(
         appBar: AppBar(title: const Text("All Posts")),
         body: BlocBuilder<PostBloc, PostState>(

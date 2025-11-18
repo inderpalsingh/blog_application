@@ -13,12 +13,14 @@ class AuthInitial extends AuthState {}
 class AuthLoading extends AuthState {}
 
 class AuthSuccess extends AuthState {
+  final String accessToken;
   final UserEntity user;
 
-  const AuthSuccess(this.user);
+
+  const AuthSuccess(this.user,this.accessToken);
 
   @override
-  List<Object?> get props => [user];
+  List<Object?> get props => [user,accessToken];
 }
 
 class AuthError extends AuthState {

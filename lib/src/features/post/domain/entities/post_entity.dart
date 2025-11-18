@@ -1,8 +1,8 @@
 
 
 import 'package:blog_application/src/features/auth/domain/entities/user_entity.dart';
-import 'package:blog_application/src/features/post/domain/category_entity.dart';
-import 'package:blog_application/src/features/post/domain/comment_entity.dart';
+import 'package:blog_application/src/features/post/domain/entities/category_entity.dart';
+import 'package:blog_application/src/features/post/domain/entities/comment_entity.dart';
 
 class PostEntity {
   final int postId;
@@ -19,7 +19,7 @@ class PostEntity {
     required this.postId,
     required this.title,
     required this.content,
-    required this.imageUrl,
+    this.imageUrl,
     required this.createAt,
     required this.updateAt,
     required this.category,

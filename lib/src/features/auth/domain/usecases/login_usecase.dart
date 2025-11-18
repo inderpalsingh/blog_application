@@ -1,14 +1,14 @@
 import 'package:blog_application/src/core/errors/failures.dart';
+import 'package:blog_application/src/features/auth/domain/entities/auth_response_entity.dart';
 import 'package:dartz/dartz.dart';
-import '../entities/user_entity.dart';
 import '../repositories/auth_repo.dart';
 
 class LoginUseCase {
-  final AuthRepository repo;
+  final AuthRepository repository;
 
-  LoginUseCase(this.repo);
+  LoginUseCase(this.repository);
 
-  Future<Either<Failure, UserEntity>> call(String email, String password) {
-    return repo.login(email, password);
+  Future<Either<Failure, AuthResponseEntity>> call(String email, String password) {
+    return repository.login(email, password);
   }
 }

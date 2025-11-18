@@ -26,7 +26,8 @@ class LoginPage extends StatelessWidget {
             }
 
             if (state is AuthSuccess) {
-              context.go('/home'); // <--- MOVE TO HOME PAGE
+              // After successful login
+              context.go('/post',extra: state.accessToken);
             }
           },
           builder: (context, state) {

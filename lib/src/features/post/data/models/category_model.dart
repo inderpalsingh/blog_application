@@ -1,6 +1,6 @@
 
 
-import 'package:blog_application/src/features/post/domain/category_entity.dart';
+import 'package:blog_application/src/features/post/domain/entities/category_entity.dart';
 
 class CategoryModel extends CategoryEntity {
   const CategoryModel({

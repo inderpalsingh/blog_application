@@ -6,6 +6,6 @@ class CommentEntity {
   const CommentEntity({
     required this.id,
     required this.comments,
-    required this.createdAt,
+    this.createdAt,
   });
 }
