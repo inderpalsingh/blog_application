@@ -1,13 +1,9 @@
-import 'dart:typed_data';
 import 'package:blog_application/src/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:blog_application/src/features/auth/presentation/bloc/auth_state.dart';
 import 'package:blog_application/src/features/post/data/models/post_model.dart';
 import 'package:blog_application/src/features/post/presentation/pages/AddPostBottomSheet.dart';
-import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../bloc/post_bloc.dart';
 import '../bloc/post_event.dart';
@@ -22,26 +18,6 @@ class PostsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dio = Dio(BaseOptions(baseUrl: 'http://192.168.29.200:10000'));
-
-    Future<void> uploadPost(PostModel post, dynamic image) async {
-      FormData formData = FormData();
-
-      if (image != null) {
-        formData.files.add(MapEntry('image', kIsWeb ? MultipartFile.fromBytes(image as Uint8List, filename: 'upload.jpg') : await MultipartFile.fromFile((image as XFile).path, filename: 'upload.jpg')));
-      }
-
-      formData.fields.add(MapEntry('post', post.toJson().toString()));
-
-      final response = await dio.post(
-        '/api/posts/user/$userId/category/$categoryId/post',
-        data: formData,
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
-      );
-
-      print("Upload response: ${response.data}");
-    }
-
     return BlocProvider(
       create: (_) => context.read<PostBloc>()..add(LoadPostsEvent(token)),
       child: Scaffold(
