@@ -1,8 +1,10 @@
 import 'package:blog_application/src/features/auth/domain/usecases/login_usecase.dart';
 import 'package:blog_application/src/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:blog_application/src/features/auth/presentation/bloc/auth_state.dart';
 import 'package:blog_application/src/features/auth/presentation/pages/login_page.dart';
 import 'package:blog_application/src/features/post/data/datasources/post_remote.dart';
 import 'package:blog_application/src/features/post/data/repositories/post_repo_impl.dart';
+import 'package:blog_application/src/features/post/domain/usecases/add_post_usecase.dart';
 import 'package:blog_application/src/features/post/domain/usecases/get_posts_usecase.dart';
 import 'package:blog_application/src/features/post/presentation/bloc/post_bloc.dart';
 import 'package:blog_application/src/features/post/presentation/pages/posts_page.dart';
@@ -32,24 +34,34 @@ class MyApp extends StatelessWidget {
           name: 'post',
           builder: (context, state){
             final token = (state.extra ?? savedToken) as String?;
+            final authState = context.read<AuthBloc>().state;
+            final userId = authState is AuthSuccess ? authState.user!.id : null;
+
+            print("userId : $userId");
+
             if (token == null) {
                 // handle error or redirect to login
                 return const LoginPage();
               }
-            return PostsPage(token: token);
+            return PostsPage(
+              token: token,
+              userId: userId,
+              categoryId: 2,
+            );
           },
         ),
       ],
     );
 
-
-
-
-
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => AuthBloc(loginUseCase, savedToken)),
-        BlocProvider(create: (_) => PostBloc(GetPostsUseCase(postRepository))),
+        BlocProvider(
+          create: (_) => PostBloc(
+            getPosts: GetPostsUseCase(postRepository),
+            addPost: AddPostUseCase(postRepository),
+          ),
+        ),
       ],
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,

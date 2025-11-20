@@ -1,5 +1,6 @@
 import 'package:blog_application/src/config/env.dart';
 import 'package:blog_application/src/core/errors/exceptions.dart';
+import 'package:blog_application/src/features/auth/data/models/auth_response_model.dart';
 import 'package:dio/dio.dart';
 import '../models/auth_response.dart';
 
@@ -13,7 +14,7 @@ class AuthRemoteDataSource {
     print({"username": email, "password": password});
     try {
       final res = await dio.post(Env.baseUrlAuth, data: {"username": email, "password": password});
-
+      print("CALLING URL: ${Env.baseUrlAuth}");
       print("LOGIN RESPONSE: ${res.data}");
       return AuthResponse.fromJson(res.data);
     } on DioException catch (e) {
@@ -29,5 +30,12 @@ class AuthRemoteDataSource {
 
       throw ServerException(message: msg);
     }
+  }
+
+  Future<AuthResponseModel> refreshToken(String refreshToken) async {
+    final response = await dio.post(Env.baseUrlRefresh, data: {
+      'refreshToken': refreshToken,
+    });
+    return AuthResponseModel.fromJson(response.data);
   }
 }

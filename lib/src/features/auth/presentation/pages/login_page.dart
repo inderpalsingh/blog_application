@@ -57,7 +57,7 @@ class LoginPage extends StatelessWidget {
                         if (formKey.currentState!.validate()) {
                           context.read<AuthBloc>().add(
                             LoginEvent(
-                              email: emailCtrl.text.trim(),
+                              username: emailCtrl.text.trim(),
                               password: passCtrl.text.trim(),
                             ),
                           );

@@ -1,4 +1,4 @@
-
+import 'package:blog_application/src/features/post/data/models/post_model.dart';
 import 'package:blog_application/src/features/post/domain/entities/post_entity.dart';
 
 import '../../domain/repositories/post_repo.dart';
@@ -11,6 +11,11 @@ class PostRepositoryImpl implements PostRepository {
 
   @override
   Future<List<PostEntity>> getPosts(String token) async {
-    return remote.getPosts(token);
+    return await remote.getPosts(token);
+  }
+
+  @override
+  Future<void> addPost({required PostEntity post, required image, required String token}) async {
+    await remote.createPost(post: post as PostModel, image: image, token: token);
   }
 }

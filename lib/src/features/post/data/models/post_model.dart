@@ -1,10 +1,9 @@
 
-import 'package:blog_application/src/features/auth/domain/entities/user_entity.dart';
 import 'package:blog_application/src/features/post/data/models/category_model.dart';
-import 'package:blog_application/src/features/post/data/models/comment_model.dart';
-import 'package:blog_application/src/features/post/data/models/user_model.dart';
 import 'package:blog_application/src/features/post/domain/entities/post_entity.dart';
 
+import 'comment_model.dart';
+import 'user_model.dart';
 
 class PostModel extends PostEntity {
   const PostModel({
@@ -14,8 +13,8 @@ class PostModel extends PostEntity {
     required super.imageUrl,
     required super.createAt,
     required super.updateAt,
-    required super.category,
-    required UserEntity user,
+    super.category,
+    required UserModel user,
     required super.comments,
   }) : super(user: user);
 
@@ -27,11 +26,23 @@ class PostModel extends PostEntity {
       imageUrl: json["imageUrl"],
       createAt: DateTime.parse(json["createAt"]),
       updateAt: DateTime.parse(json["updateAt"]),
-      category: CategoryModel.fromJson(json["category"]),
-      user: UserModel.fromJson(json["user"]), // WORKS NOW
-      comments: (json["comments"] as List)
-          .map((e) => CommentModel.fromJson(e))
-          .toList(),
+      category: json["category"] != null ? CategoryModel.fromJson(json["category"]) : null,
+      user: UserModel.fromJson(json["user"]),
+      comments: (json["comments"] as List).map((e) => CommentModel.fromJson(e)).toList(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      "postId": postId,
+      "title": title,
+      "content": content,
+      "imageUrl": imageUrl,
+      "createAt": createAt.toIso8601String(),
+      "updateAt": updateAt.toIso8601String(),
+      "category": category != null ? (category as CategoryModel).toJson() : null,
+      "user": (user as UserModel).toJson(),
+      "comments": comments.map((e) => (e as CommentModel).toJson()).toList(),
+    };
   }
 }

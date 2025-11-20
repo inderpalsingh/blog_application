@@ -11,7 +11,7 @@ class PostEntity {
   final String? imageUrl;
   final DateTime createAt;
   final DateTime updateAt;
-  final CategoryEntity category;
+  final CategoryEntity? category;
   final UserEntity user;
   final List<CommentEntity> comments;
 
@@ -22,7 +22,7 @@ class PostEntity {
     this.imageUrl,
     required this.createAt,
     required this.updateAt,
-    required this.category,
+    this.category,
     required this.user,
     required this.comments,
   });
