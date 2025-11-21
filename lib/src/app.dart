@@ -27,6 +27,57 @@ class MyApp extends StatelessWidget {
 
     final router = GoRouter(
       initialLocation: savedToken == null ? "/" : "/post",
+      redirect: (context, state) {
+        final token = (state.extra ?? savedToken) as String?;
+        final isLoggedIn = token != null && token.isNotEmpty;
+
+        // Use uri.toString() or fullPath to get the current location
+        final currentPath = state.uri.toString();
+        print("🔀 WEB REDIRECT:");
+        print("   - Current path: $currentPath");
+        print("   - Has token: ${token != null}");
+        print("   - Is logged in: $isLoggedIn");
+        final goingToLogin = currentPath == '/';
+        final goingToPost = currentPath == '/post';
+
+        // If user is logged in and trying to access login, redirect to posts
+        if (isLoggedIn && goingToLogin) {
+          print("🔄 Redirecting logged-in user from / to /post");
+          return '/post';
+        }
+
+        // If user is not logged in and trying to access posts, redirect to login
+        if (!isLoggedIn && goingToPost) {
+          print("🔄 Redirecting logged-out user from /post to /");
+          return '/';
+        }
+
+        return null; // No redirect needed
+      },
+      routes: [
+        GoRoute(path: '/', name: 'login', builder: (context, state) => LoginPage()),
+        GoRoute(
+          path: '/post',
+          name: 'post',
+          builder: (context, state) {
+            final token = (state.extra ?? savedToken) as String?;
+
+            if (token == null) {
+              return LoginPage();
+            }
+
+            final authState = context.read<AuthBloc>().state;
+            final userId = authState is AuthSuccess ? authState.user?.id : null;
+
+            return PostsPage(token: token, userId: userId, categoryId: 2);
+          },
+        ),
+      ],
+    );
+
+    /*
+    final router = GoRouter(
+      initialLocation: savedToken == null ? "/" : "/post",
       routes: [
         GoRoute(path: '/', name: 'login', builder: (context, state) => LoginPage()),
         GoRoute(
@@ -52,21 +103,16 @@ class MyApp extends StatelessWidget {
         ),
       ],
     );
+    */
 
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => AuthBloc(loginUseCase, savedToken)),
         BlocProvider(
-          create: (_) => PostBloc(
-            getPosts: GetPostsUseCase(postRepository),
-            addPost: AddPostUseCase(postRepository),
-          ),
+          create: (_) => PostBloc(getPosts: GetPostsUseCase(postRepository), addPost: AddPostUseCase(postRepository)),
         ),
       ],
-      child: MaterialApp.router(
-        debugShowCheckedModeBanner: false,
-        routerConfig: router,
-      ),
+      child: MaterialApp.router(debugShowCheckedModeBanner: false, routerConfig: router),
     );
   }
 }

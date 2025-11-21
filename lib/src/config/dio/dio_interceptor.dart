@@ -28,7 +28,7 @@ class AppInterceptor extends Interceptor {
       if (refreshToken != null) {
         try {
           final response = await dio.post(
-            "${Env.baseUrl}/auth/refresh",
+            Env.baseUrlRefresh,
             data: {"refreshToken": refreshToken},
           );
 
