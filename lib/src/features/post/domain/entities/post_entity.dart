@@ -26,10 +26,4 @@ class PostEntity {
     required this.user,
     required this.comments,
   });
-
-
-
-
-
-
 }
