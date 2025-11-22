@@ -18,6 +18,9 @@ class PostModel extends PostEntity {
     required super.comments,
   }) : super(user: user);
 
+
+
+
   factory PostModel.fromJson(Map<String, dynamic> json) {
     return PostModel(
       postId: json["postId"],
@@ -31,6 +34,25 @@ class PostModel extends PostEntity {
       comments: (json["comments"] as List).map((e) => CommentModel.fromJson(e)).toList(),
     );
   }
+
+factory PostModel.fromEntity(PostEntity entity) {
+  return PostModel(
+    postId: entity.postId,
+    title: entity.title,
+    content: entity.content,
+    imageUrl: entity.imageUrl,
+    createAt: entity.createAt,
+    updateAt: entity.updateAt,
+    category: entity.category != null
+        ? CategoryModel.fromEntity(entity.category!)
+        : null,
+    user: UserModel.fromEntity(entity.user),
+    comments: entity.comments
+        .map((c) => CommentModel.fromEntity(c))
+        .toList(),
+  );
+}
+
 
   Map<String, dynamic> toJson() {
     return {

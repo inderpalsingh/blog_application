@@ -9,4 +9,10 @@ Future<void> addPost({
     required dynamic image, // File on mobile, Uint8List on web
     required String token,
   });
+
+
+Future<void> deletedPost({
+  required int postId,
+  required String token,
+  });
 }

@@ -28,14 +28,23 @@ class PostsPage extends StatelessWidget {
             if (state is PostError) return Center(child: Text(state.message));
 
             if (state is PostLoaded) {
+
               return ListView.builder(
                 itemCount: state.posts.length,
                 itemBuilder: (context, index) {
                   final post = state.posts[index];
                   return ListTile(
+
                     title: Text(post.title),
                     subtitle: Text(post.content),
                     leading: post.imageUrl != null ? Image.network(post.imageUrl!, width: 50, height: 50, fit: BoxFit.cover) : const Icon(Icons.image_not_supported),
+                    trailing: IconButton(
+                      onPressed: () {
+                        context.read<PostBloc>().add(
+                          DeletePost(postId: post.postId, token: token)
+                        );
+                      }, icon: Icon(Icons.delete),
+                    ),
                   );
                 },
               );

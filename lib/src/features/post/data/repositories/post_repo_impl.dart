@@ -18,4 +18,9 @@ class PostRepositoryImpl implements PostRepository {
   Future<void> addPost({required PostEntity post, required image, required String token}) async {
     await remote.createPost(post: post as PostModel, image: image, token: token);
   }
+
+  @override
+  Future<void> deletedPost({required int postId, required String token}) async {
+    return await remote.deletePost(postId: postId, token: token);
+  }
 }

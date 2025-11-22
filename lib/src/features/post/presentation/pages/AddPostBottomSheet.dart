@@ -116,6 +116,7 @@ class _AddPostBottomSheetState extends State<AddPostBottomSheet> {
               onPressed: _submit,
               child: const Text('Add Post'),
             ),
+            SizedBox(height: 10)
           ],
         ),
       ),

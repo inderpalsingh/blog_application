@@ -13,5 +13,14 @@ class AddPostEvent extends PostEvent {
   final dynamic image; // XFile or Uint8List
   final String token;
 
-  AddPostEvent({required this.post,required this.image,required this.token});
+  AddPostEvent({required this.post, required this.image, required this.token});
+}
+
+class DeletePost extends PostEvent {
+  final int postId;
+  final String token;
+
+  DeletePost({required this.postId, required this.token});
+
+  List<Object> get props => [postId, token];
 }
