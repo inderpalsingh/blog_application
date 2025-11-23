@@ -64,6 +64,7 @@ class PostRemoteDataSource {
   Future<void> deletePost({required String token, required int postId}) async {
     final url = "${Env.baseUrlPosts}/$postId";
     print("DELETE URL = $url");
+    print("TOKEN BEING SENT: $token");
 
     try {
       final response = await dio.delete(url, options: Options(headers: {"Authorization": "Bearer $token"}));

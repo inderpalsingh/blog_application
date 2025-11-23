@@ -50,8 +50,23 @@ class PostBloc extends Bloc<PostEvent, PostState> {
 
           emit(PostLoaded(updatedPosts));
         } catch (e) {
-          // Emit error state if delete fails
-          emit(PostError("Failed to delete post: ${e.toString()}"));
+          // Check if it's an unauthorized error
+          if (e.toString().contains('401') || e.toString().contains('Unauthorized')) {
+            // Token is invalid - trigger logout or token refresh
+            print("🔄 Token expired or invalid, redirecting to login");
+
+            // Option A: Redirect to login
+            // You might need to use a GlobalKey for navigation here
+            // Or emit a specific state that your UI can listen to
+
+            // Option B: Show error and suggest re-login
+            emit(PostError("Session expired. Please login again."));
+
+            // Option C: Trigger logout
+            // context.read<AuthBloc>().add(LogoutRequested());
+          } else {
+            emit(PostError("Failed to delete post: ${e.toString()}"));
+          }
         }
       }
     });

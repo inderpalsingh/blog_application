@@ -14,6 +14,30 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+// Add token validation function
+bool isTokenValid(String? token) {
+  if (token == null || token.isEmpty) {
+    print("❌ Token is null or empty");
+    return false;
+  }
+
+  // Basic JWT validation
+  final parts = token.split('.');
+  if (parts.length != 3) {
+    print("❌ Token is not in JWT format");
+    return false;
+  }
+
+  // Reasonable length check for JWT
+  if (token.length < 50) {
+    print("❌ Token is too short: ${token.length} characters");
+    return false;
+  }
+
+  print("✅ Token appears valid (length: ${token.length})");
+  return true;
+}
+
 class MyApp extends StatelessWidget {
   final LoginUseCase loginUseCase;
   final String? savedToken;
@@ -37,18 +61,17 @@ class MyApp extends StatelessWidget {
         print("🔀 WEB REDIRECT:");
         print("   - Current path: $currentPath");
         print("   - Has token: ${token != null}");
-        print("   - Is logged in: $isLoggedIn");
-        final goingToLogin = currentPath == '/';
-        final goingToPost = currentPath == '/post';
+        print("   - Token valid: $isLoggedIn");
+        print("   - Token preview: ${token != null ? '${token.substring(0, token.length < 20 ? token.length : 20)}...' : 'null'}");
 
         // If user is logged in and trying to access login, redirect to posts
-        if (isLoggedIn && goingToLogin) {
+        if (isLoggedIn && currentPath == '/') {
           print("🔄 Redirecting logged-in user from / to /post");
           return '/post';
         }
 
         // If user is not logged in and trying to access posts, redirect to login
-        if (!isLoggedIn && goingToPost) {
+        if (!isLoggedIn && currentPath == '/post') {
           print("🔄 Redirecting logged-out user from /post to /");
           return '/';
         }
@@ -63,8 +86,13 @@ class MyApp extends StatelessWidget {
           builder: (context, state) {
             final token = (state.extra ?? savedToken) as String?;
 
-            if (token == null) {
-              return LoginPage();
+            // Enhanced token validation with redirect
+            if (token == null || !isTokenValid(token)) {
+              print("🚫 Invalid token in PostsPage, redirecting to login");
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                context.go('/');
+              });
+              return const Scaffold(body: Center(child: CircularProgressIndicator()));
             }
 
             final authState = context.read<AuthBloc>().state;
@@ -80,14 +108,26 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider(create: (_) => AuthBloc(loginUseCase, savedToken)),
         BlocProvider(
-          create: (_) => PostBloc(
-            getPosts: GetPostsUseCase(postRepository),
-            addPost: AddPostUseCase(postRepository),
-            deletePostUseCase: DeletePostUseCase(postRepository)
-          ),
+          create: (_) => PostBloc(getPosts: GetPostsUseCase(postRepository), addPost: AddPostUseCase(postRepository), deletePostUseCase: DeletePostUseCase(postRepository)),
         ),
       ],
-      child: MaterialApp.router(debugShowCheckedModeBanner: false, routerConfig: router),
+      child: MaterialApp.router(
+        debugShowCheckedModeBanner: false, routerConfig: router,
+        builder: (context, child) {
+          return BlocListener<AuthBloc,AuthState>(
+            listener: (context, state) {
+              if(state is AuthSuccess){
+                print("🔐 Auth success, token: ${state.accessToken.substring(0, 20)}...");
+              }else if (state is AuthError) {
+                // Handle auth errors
+                print("🔐 Auth error: ${state.message}");
+              }
+            },
+            child: child,
+          );
+        },
+
+        ),
     );
   }
 }
