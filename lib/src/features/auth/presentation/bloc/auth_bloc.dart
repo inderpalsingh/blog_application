@@ -5,6 +5,7 @@ import 'package:blog_application/src/features/auth/presentation/bloc/auth_state.
 import 'package:blog_application/src/features/post/data/models/user_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LoginUseCase loginUseCase;
   final LocalStorage storage = LocalStorage();
@@ -25,18 +26,27 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       print("🔐 LOGIN SUCCESS - Token: ${auth.accessToken.substring(0, 20)}...");
 
       // Save tokens & user locally
-      print("💾 Saving token to storage...");
       await storage.saveToken(auth.accessToken);
       await storage.saveRefreshToken(auth.refreshToken);
 
       // Save user to local storage
-      await storage.saveUser({"id": auth.user.id, "name": auth.user.name, "email": auth.user.email, "age": auth.user.age, "gender": auth.user.gender});
-
-      // Debug: Print all stored keys to verify everything was saved
-      await storage.debugPrintAllKeys();
+      await storage.saveUser({
+        "id": auth.user.id,
+        "name": auth.user.name,
+        "email": auth.user.email,
+        "age": auth.user.age,
+        "gender": auth.user.gender,
+      });
 
       // Build user model
-      final user = UserModel(id: auth.user.id, name: auth.user.name, email: auth.user.email, password: "", age: auth.user.age, gender: auth.user.gender);
+      final user = UserModel(
+        id: auth.user.id,
+        name: auth.user.name,
+        email: auth.user.email,
+        password: "",
+        age: auth.user.age,
+        gender: auth.user.gender,
+      );
 
       emit(AuthSuccess(user, auth.accessToken));
     } catch (e) {
@@ -47,80 +57,66 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   Future<void> _onAppStarted(AppStarted event, Emitter<AuthState> emit) async {
     print("🚀 APP STARTED - Checking authentication...");
-    print("🚀 Initial savedToken parameter: ${savedToken != null ? 'EXISTS' : 'NULL'}");
-
-    // Debug: Print all stored keys first
-    await storage.debugPrintAllKeys();
-
-     // Temporary debug
-    await _debugUserRestoration();
 
     // Check if we have a saved token
     final storageToken = await storage.getToken();
     final token = savedToken ?? storageToken;
 
+    print("🔐 TOKEN STATUS:");
+    print("   - Storage token: ${storageToken != null ? 'EXISTS' : 'NULL'}");
+    print("   - Saved token param: ${savedToken != null ? 'EXISTS' : 'NULL'}");
+    print("   - Final token: ${token != null ? 'EXISTS' : 'NULL'}");
+
     if (token == null || token.isEmpty) {
-      print("🚀 No valid token found - staying in initial state");
+      print("🚀 No valid token found");
       return;
     }
 
-    print("🚀 Token found, attempting to restore user data...");
+    // Validate token format
+    if (!_isTokenValid(token)) {
+      print("🚀 Invalid token format");
+      await storage.clear();
+      return;
+    }
 
-    // We have a token, try to restore user data
+    print("🚀 Token is valid, length: ${token.length}");
+
+    // We have a valid token, try to restore user data
     try {
       final userJson = await storage.getUser();
 
-
       if (userJson != null) {
-      // final  user = UserModel.fromJson(userJson);
-      final user = UserModel(
+        print("🚀 User data found in storage");
+
+        // Use safe user creation
+        final user = UserModel(
           id: userJson['id'] as int? ?? 0,
           name: userJson['name'] as String? ?? 'User',
           email: userJson['email'] as String? ?? '',
-          password: '',
+          password: userJson['password'] as String? ?? '',
           age: userJson['age'] as int? ?? 0,
           gender: userJson['gender'] as String? ?? 'unknown',
         );
 
-        print("🚀 User restored successfully: ${user.name}");
+        print("🚀 User restored successfully: ${user.name} (ID: ${user.id})");
         emit(AuthSuccess(user, token));
-        print("🚀 Restored user: ${user.name} (ID: ${user.id})");
       } else {
         print("🚀 No user data found in storage");
+        // Even without user data, emit success with token
         emit(AuthSuccess(null, token));
       }
     } catch (e) {
       print("🚀 Error restoring user data: $e");
-      // Clear corrupted user data but keep the valid token
+      // Don't clear storage, just emit with null user
       emit(AuthSuccess(null, token));
     }
   }
 
-  // Temporary debug method - add this to your AuthBloc
-  Future<void> _debugUserRestoration() async {
-  try {
-    final userJson = await storage.getUser();
-    print("🔍 DEBUG USER RESTORATION:");
-    print("   - User JSON from storage: $userJson");
-
-    if (userJson != null) {
-      // Test each field individually
-      print("   - Testing individual fields:");
-      print("     id: ${userJson['id']} (type: ${userJson['id']?.runtimeType})");
-      print("     name: ${userJson['name']} (type: ${userJson['name']?.runtimeType})");
-      print("     email: ${userJson['email']} (type: ${userJson['email']?.runtimeType})");
-      print("     age: ${userJson['age']} (type: ${userJson['age']?.runtimeType})");
-      print("     gender: ${userJson['gender']} (type: ${userJson['gender']?.runtimeType})");
-
-      // Try to create UserModel
-      print("   - Attempting UserModel.fromJson...");
-      final user = UserModel.fromJson(userJson);
-      print("   - SUCCESS: UserModel created: ${user.name}");
-    }
-  } catch (e, stackTrace) {
-    print("❌ USER RESTORATION FAILED:");
-    print("   - Error: $e");
-    print("   - Stack trace: $stackTrace");
+  bool _isTokenValid(String token) {
+    if (token.isEmpty) return false;
+    final parts = token.split('.');
+    if (parts.length != 3) return false;
+    if (token.length < 50) return false;
+    return true;
   }
-}
 }
