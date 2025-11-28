@@ -12,11 +12,14 @@ class PostRemoteDataSource {
 
   PostRemoteDataSource(this.dio);
 
-
-
   Future<List<PostEntity>> getPosts(String token) async {
     try {
-      final response = await dio.get("${Env.baseUrlPosts}?pageNumber=0&pageSize=10&sortBy=createAt&sortDir=asc", options: Options(headers: {'Authorization': 'Bearer $token'}));
+      // final response = await dio.get("${Env.baseUrlPosts}?pageNumber=0&pageSize=10&sortBy=createAt&sortDir=asc",
+      final response = await dio.get(Env.baseUrlPosts, queryParameters: {
+        'pageNumber': 0, 'pageSize': 10, 'sortBy': 'createAt', 'sortDir': 'asc'
+        },
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
       print("POSTS URL = ${Env.baseUrlPosts}");
       print("response.data = ${response.data}");
 
