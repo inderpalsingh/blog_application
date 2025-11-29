@@ -1,4 +1,6 @@
 import 'package:blog_application/src/core/storage/local_storage.dart';
+import 'package:blog_application/src/features/auth/data/datasources/auth_remote.dart';
+import 'package:blog_application/src/features/auth/data/repositories/auth_repo_impl.dart';
 import 'package:blog_application/src/features/auth/domain/usecases/login_usecase.dart';
 import 'package:blog_application/src/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:blog_application/src/features/auth/presentation/bloc/auth_state.dart';
@@ -50,7 +52,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final dio = Dio();
     final localStorage = LocalStorage();
-    final postRemoteDataSource = PostRemoteDataSource(dio,localStorage);
+
+    final authRemoteDataSource = AuthRemoteDataSource(dio);
+    final authRepository = AuthRepositoryImpl(authRemoteDataSource, localStorage);
+    final postRemoteDataSource = PostRemoteDataSource(dio,localStorage,authRepository);
     final postRepository = PostRepositoryImpl(postRemoteDataSource,localStorage);
 
     final router = GoRouter(

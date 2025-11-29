@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:blog_application/src/core/storage/local_storage.dart';
+import 'package:blog_application/src/features/auth/domain/repositories/auth_repo.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:blog_application/src/config/env.dart';
@@ -11,17 +12,18 @@ import 'package:dio/dio.dart';
 class PostRemoteDataSource {
   final Dio dio;
   final LocalStorage localStorage;
+  final AuthRepository authRepository;
 
-  PostRemoteDataSource(this.dio,this.localStorage);
+  PostRemoteDataSource(this.dio,this.localStorage,this.authRepository);
 
   Future<List<PostEntity>> getPosts() async {
     try {
 
-      // Get the token from localStorage
-      final token = await localStorage.getToken();
+      // Use getValidToken from AuthRepository
+      final token = await authRepository.getValidToken();
 
       if (token == null) {
-        throw AuthException(message: 'No authentication token found. Please login again.');
+        throw AuthException(message: 'No valid token available. Please login again.');
       }
 
       final response = await dio.get(Env.baseUrlPosts,queryParameters: {'pageNumber': 0, 'pageSize': 10, 'sortBy': 'createAt', 'sortDir': 'asc'},
@@ -97,8 +99,8 @@ class PostRemoteDataSource {
   Future<PostEntity> updatePost({required int postId, required PostModel post, required dynamic image}) async {
   final url = "${Env.baseUrlPosts}/$postId";
 
-  // Get the token from localStorage
-  final token = await localStorage.getToken();
+  // Use your existing getValidToken method from AuthRepository
+  final token = await authRepository.getValidToken();
 
   if (token == null) {
     throw AuthException(message: 'No authentication token found. Please login again.');

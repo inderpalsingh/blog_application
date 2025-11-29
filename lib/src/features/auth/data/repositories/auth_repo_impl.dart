@@ -7,16 +7,16 @@ import 'package:blog_application/src/features/post/data/models/user_model.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
-  final AuthRemoteDataSource remote;
+  final AuthRemoteDataSource authRemoteDataSource;
   final LocalStorage storage;
 
-  AuthRepositoryImpl(this.remote, this.storage);
+  AuthRepositoryImpl(this.authRemoteDataSource, this.storage);
 
   // LOGIN ----------------------------------------------------------
   @override
   Future<AuthResponseEntity> login(String email, String password) async {
     try {
-      final response = await remote.login(email, password);
+      final response = await authRemoteDataSource.login(email, password);
 
       await storage.saveToken(response.accessToken);
       await storage.saveRefreshToken(response.refreshToken);
@@ -66,7 +66,7 @@ class AuthRepositoryImpl implements AuthRepository {
     if (refreshToken == null) return null;
 
     try {
-      final newTokens = await remote.refreshToken(refreshToken);
+      final newTokens = await authRemoteDataSource.refreshToken(refreshToken);
 
       // Save new tokens
       await storage.saveToken(newTokens.accessToken);
@@ -85,7 +85,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<AuthResponseEntity> refreshToken(String refreshToken)async {
-    final response = await remote.refreshToken(refreshToken);
+    final response = await authRemoteDataSource.refreshToken(refreshToken);
     return AuthResponseEntity(
       accessToken: response.accessToken,
       refreshToken: response.refreshToken,

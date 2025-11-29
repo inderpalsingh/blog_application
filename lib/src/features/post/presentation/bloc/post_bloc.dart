@@ -62,11 +62,23 @@ class PostBloc extends Bloc<PostEvent, PostState> {
   void _onAddPost(AddPostEvent event, Emitter<PostState> emit) async {
     emit(PostLoading());
     try {
-      await addPost(post: event.post, image: event.image, token: event.token);
+      final result = await addPost.call(
+        post: event.post,
+        image: event.image,
+        token: event.token,
+      );
+
 
       // Reload posts after adding
-      final posts = await getPosts();
-      emit(PostsLoaded(posts as List<PostEntity>));
+      result.fold(
+        // Failure case
+        (failure) => emit(PostError(failure.message)),
+        // Success case - void means success
+        (_) {
+          // Post added successfully, reload posts or update state
+          add(LoadPostsEvent(event.token)); // Trigger reload of posts
+        },
+      );
     } catch (e, stack) {
       print("ADD POST ERROR = $e");
       print(stack);
