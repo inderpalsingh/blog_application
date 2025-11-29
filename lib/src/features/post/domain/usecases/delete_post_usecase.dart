@@ -1,11 +1,13 @@
+import 'package:blog_application/src/core/errors/failures.dart';
 import 'package:blog_application/src/features/post/domain/repositories/post_repo.dart';
+import 'package:dartz/dartz.dart';
 
 class DeletePostUseCase {
   final PostRepository repository;
 
   DeletePostUseCase(this.repository);
 
-  Future<void> call(DeletePostParams params) async {
+  Future<Either<Failure, void>> call(DeletePostParams params) async {
     return await repository.deletedPost(
       postId: params.postId,
       token: params.token,

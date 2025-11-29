@@ -1,3 +1,4 @@
+import 'package:blog_application/src/core/storage/local_storage.dart';
 import 'package:blog_application/src/features/auth/domain/usecases/login_usecase.dart';
 import 'package:blog_application/src/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:blog_application/src/features/auth/presentation/bloc/auth_state.dart';
@@ -7,6 +8,7 @@ import 'package:blog_application/src/features/post/data/repositories/post_repo_i
 import 'package:blog_application/src/features/post/domain/usecases/add_post_usecase.dart';
 import 'package:blog_application/src/features/post/domain/usecases/delete_post_usecase.dart';
 import 'package:blog_application/src/features/post/domain/usecases/get_posts_usecase.dart';
+import 'package:blog_application/src/features/post/domain/usecases/update_post_usecase.dart';
 import 'package:blog_application/src/features/post/presentation/bloc/post_bloc.dart';
 import 'package:blog_application/src/features/post/presentation/pages/posts_page.dart';
 import 'package:dio/dio.dart';
@@ -47,8 +49,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dio = Dio();
-    final postRemoteDataSource = PostRemoteDataSource(dio);
-    final postRepository = PostRepositoryImpl(postRemoteDataSource);
+    final localStorage = LocalStorage();
+    final postRemoteDataSource = PostRemoteDataSource(dio,localStorage);
+    final postRepository = PostRepositoryImpl(postRemoteDataSource,localStorage);
 
     final router = GoRouter(
       initialLocation: savedToken == null ? "/" : "/post",
@@ -108,7 +111,12 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider(create: (_) => AuthBloc(loginUseCase, savedToken)),
         BlocProvider(
-          create: (_) => PostBloc(getPosts: GetPostsUseCase(postRepository), addPost: AddPostUseCase(postRepository), deletePostUseCase: DeletePostUseCase(postRepository)),
+          create: (_) => PostBloc(
+            getPosts: GetPostsUseCase(postRepository),
+            addPost: AddPostUseCase(postRepository),
+            deletePostUseCase: DeletePostUseCase(postRepository),
+            updatePost: UpdatePostUseCase(postRepository)
+          ),
         ),
       ],
       child: MaterialApp.router(
