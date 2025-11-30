@@ -1,3 +1,4 @@
+import 'package:blog_application/src/core/errors/exceptions.dart';
 import 'package:blog_application/src/core/storage/local_storage.dart';
 import 'package:blog_application/src/features/auth/data/datasources/auth_remote.dart';
 import 'package:blog_application/src/features/auth/domain/entities/auth_response_entity.dart';
@@ -21,7 +22,6 @@ class AuthRepositoryImpl implements AuthRepository {
       await storage.saveToken(response.accessToken);
       await storage.saveRefreshToken(response.refreshToken);
 
-
       // Since API doesn't return full user info, we use default values
       final user = UserEntity(
         id: response.id!,
@@ -33,27 +33,17 @@ class AuthRepositoryImpl implements AuthRepository {
       );
 
       // Save user to storage
-      await storage.saveUser(UserModel(
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        password: "",
-        age: user.age,
-        gender: user.gender,
-      ).toJson());
+      await storage.saveUser(UserModel(id: user.id, name: user.name, email: user.email, password: "", age: user.age, gender: user.gender).toJson());
 
       // Return final auth object
-    return AuthResponseEntity(
-      accessToken: response.accessToken,
-      refreshToken: response.refreshToken,
-      user: user,
-    );
+      return AuthResponseEntity(accessToken: response.accessToken, refreshToken: response.refreshToken, user: user);
     } catch (e) {
-    throw Exception("Login failed: $e");
-  }
+      throw Exception("Login failed: $e");
+    }
   }
 
-// GET VALID TOKEN ------------------------------------------------
+  // GET VALID TOKEN ------------------------------------------------
+  @override
   Future<String?> getValidToken() async {
     final token = await storage.getToken();
 
@@ -79,17 +69,36 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  @override
   bool isTokenExpired(String token) {
     return JwtDecoder.isExpired(token);
   }
 
   @override
-  Future<AuthResponseEntity> refreshToken(String refreshToken)async {
+  Future<AuthResponseEntity> refreshToken(String refreshToken) async {
     final response = await authRemoteDataSource.refreshToken(refreshToken);
+
+     // Get user data from storage since refresh token doesn't return it
+    final storedUserMap = await storage.getUser();
+
+    if (storedUserMap == null) {
+      throw AuthException(message: 'No user data found. Please login again.');
+    }
+
+    // Convert Map to UserEntity
+      final storedUser = UserEntity(
+        id: storedUserMap['id'] ?? 0,
+        name: storedUserMap['name'] ?? 'Unknown',
+        email: storedUserMap['email'] ?? '',
+        password: storedUserMap['password'] ?? '',
+        age: storedUserMap['age'] ?? 0,
+        gender: storedUserMap['gender'] ?? 'unknown',
+      );
+
     return AuthResponseEntity(
       accessToken: response.accessToken,
       refreshToken: response.refreshToken,
-      user: response.user
+      user: storedUser
     );
   }
 }

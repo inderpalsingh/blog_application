@@ -26,7 +26,7 @@ class PostRemoteDataSource {
         throw AuthException(message: 'No valid token available. Please login again.');
       }
 
-      final response = await dio.get(Env.baseUrlPosts,queryParameters: {'pageNumber': 0, 'pageSize': 10, 'sortBy': 'createAt', 'sortDir': 'asc'},
+      final response = await dio.get(Env.baseUrlPosts,queryParameters: {'pageNumber': 0, 'pageSize': 10, 'sortBy': 'postId', 'sortDir': 'asc'},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       print("POSTS URL = ${Env.baseUrlPosts}");

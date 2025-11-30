@@ -1,6 +1,7 @@
 import 'package:blog_application/src/config/env.dart';
 import 'package:blog_application/src/core/errors/exceptions.dart';
 import 'package:blog_application/src/features/auth/data/models/auth_response_model.dart';
+import 'package:blog_application/src/features/auth/data/models/refresh_token_response.dart';
 import 'package:dio/dio.dart';
 import '../models/auth_response.dart';
 
@@ -32,10 +33,12 @@ class AuthRemoteDataSource {
     }
   }
 
-  Future<AuthResponseModel> refreshToken(String refreshToken) async {
+  Future<RefreshTokenResponse> refreshToken(String refreshToken) async {
     final response = await dio.post(Env.baseUrlRefresh, data: {
       'refreshToken': refreshToken,
     });
-    return AuthResponseModel.fromJson(response.data);
+
+    print("🔄 REFRESH TOKEN RAW RESPONSE: ${response.data}");
+    return RefreshTokenResponse.fromJson(response.data);
   }
 }

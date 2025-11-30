@@ -1,4 +1,3 @@
-import 'package:blog_application/src/features/post/domain/entities/post_entity.dart';
 import 'package:blog_application/src/features/post/domain/usecases/add_post_usecase.dart';
 import 'package:blog_application/src/features/post/domain/usecases/delete_post_usecase.dart';
 import 'package:blog_application/src/features/post/domain/usecases/update_post_usecase.dart';
