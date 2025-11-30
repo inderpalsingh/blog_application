@@ -43,7 +43,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   // GET VALID TOKEN ------------------------------------------------
-  @override
+  /* @override
   Future<String?> getValidToken() async {
     final token = await storage.getToken();
 
@@ -67,7 +67,41 @@ class AuthRepositoryImpl implements AuthRepository {
       print("Refresh token failed: $e");
       return null;
     }
+  } */
+
+  Future<String?> getValidToken() async {
+  final token = await storage.getToken();
+
+  if (token != null && !JwtDecoder.isExpired(token)) {
+    return token; // still valid
   }
+
+  // token expired → refresh
+  final refreshToken = await storage.getRefreshToken();
+  if (refreshToken == null) {
+    print("❌ No refresh token available");
+    return null;
+  }
+
+  try {
+    print("🔄 Refreshing expired token...");
+    // ✅ FIX: Call the method properly with await
+    final newTokens = await this.refreshToken(refreshToken); // This should be a method call
+
+    // Save new tokens
+    await storage.saveToken(newTokens.accessToken);
+    await storage.saveRefreshToken(newTokens.refreshToken);
+
+    print("✅ Token refreshed successfully");
+    return newTokens.accessToken;
+  } catch (e) {
+    print("❌ Refresh token failed: $e");
+    // Clear tokens on failure
+    await storage.deleteToken();
+    await storage.deleteRefreshToken();
+    return null;
+  }
+}
 
   @override
   bool isTokenExpired(String token) {

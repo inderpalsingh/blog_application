@@ -132,6 +132,75 @@ class LocalStorage {
     }
   }
 
+
+  Future<void> deleteToken() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove("token");
+      print("💾 TOKEN DELETED SUCCESSFULLY");
+
+      // Verify it was actually deleted
+      final verifiedToken = await getToken();
+      if (verifiedToken == null) {
+        print("   ✅ TOKEN DELETION VERIFICATION: SUCCESS");
+      } else {
+        print("   ❌ TOKEN DELETION VERIFICATION: FAILED");
+      }
+    } catch (e) {
+      print("❌ ERROR DELETING TOKEN: $e");
+    }
+  }
+
+  Future<void> deleteRefreshToken() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove("refreshToken");
+      print("💾 REFRESH TOKEN DELETED SUCCESSFULLY");
+
+      // Verify it was actually deleted
+      final verifiedRefreshToken = await getRefreshToken();
+      if (verifiedRefreshToken == null) {
+        print("   ✅ REFRESH TOKEN DELETION VERIFICATION: SUCCESS");
+      } else {
+        print("   ❌ REFRESH TOKEN DELETION VERIFICATION: FAILED");
+      }
+    } catch (e) {
+      print("❌ ERROR DELETING REFRESH TOKEN: $e");
+    }
+  }
+
+  Future<void> deleteUser() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove("user");
+      print("💾 USER DELETED SUCCESSFULLY");
+
+      // Verify it was actually deleted
+      final verifiedUser = await getUser();
+      if (verifiedUser == null) {
+        print("   ✅ USER DELETION VERIFICATION: SUCCESS");
+      } else {
+        print("   ❌ USER DELETION VERIFICATION: FAILED");
+      }
+    } catch (e) {
+      print("❌ ERROR DELETING USER: $e");
+    }
+  }
+
+  // Optional: Method to delete all auth-related data at once
+  Future<void> clearAuthData() async {
+    try {
+      await deleteToken();
+      await deleteRefreshToken();
+      await deleteUser();
+      print("💾 ALL AUTH DATA CLEARED SUCCESSFULLY");
+    } catch (e) {
+      print("❌ ERROR CLEARING AUTH DATA: $e");
+    }
+  }
+
+
+
   // Additional method to check all stored keys (for debugging)
   Future<void> debugPrintAllKeys() async {
     try {
@@ -153,4 +222,7 @@ class LocalStorage {
       print("❌ ERROR READING STORAGE KEYS: $e");
     }
   }
+
+
+
 }

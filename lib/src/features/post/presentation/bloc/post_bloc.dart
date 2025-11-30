@@ -64,7 +64,6 @@ class PostBloc extends Bloc<PostEvent, PostState> {
       final result = await addPost.call(
         post: event.post,
         image: event.image,
-        token: event.token,
       );
 
 

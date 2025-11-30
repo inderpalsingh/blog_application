@@ -6,7 +6,7 @@ import 'package:dartz/dartz.dart';
 abstract class PostRepository {
   Future<Either<Failure, List<PostEntity>>> getPosts();
 
-Future<Either<Failure, void>> addPost({required PostEntity post, required image, required String token});
+Future<Either<Failure, void>> addPost({required PostEntity post, required image});
 
 
 Future<Either<Failure, void>> deletedPost({

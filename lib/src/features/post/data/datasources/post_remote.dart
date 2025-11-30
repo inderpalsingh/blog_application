@@ -39,18 +39,33 @@ class PostRemoteDataSource {
     }
   }
 
-  Future<void> createPost({required PostModel post, required dynamic image, required String token}) async {
-    final url = "${Env.baseUrlPosts}/user/${post.user.id}/category/${post.category?.categoryId}/post";
-    print("UPLOAD URL = $url");
+  Future<void> createPost({required PostModel post, required dynamic image}) async {
 
-    // Debug: Print what we're sending
+    final url = "${Env.baseUrlPosts}/user/${post.user.id}/category/${post.category?.categoryId}/post";
+
+     // Use getValidToken instead of direct token
+    final token = await authRepository.getValidToken();
+
+    if (token == null) {
+      throw AuthException(message: 'No valid token available. Please login again.');
+    }
+
+
+    print("UPLOAD URL = $url");
     print("POST DATA: title=${post.title}, content=${post.content}");
     print("USER ID: ${post.user.id}");
     print("CATEGORY ID: ${post.category?.categoryId}");
+    print("USING TOKEN: ${token.substring(0, 20)}...");
 
     final postData = {"title": post.title, "content": post.content};
 
-    final formData = FormData.fromMap({"post": MultipartFile.fromString(jsonEncode(postData), contentType: MediaType.parse('application/json')), if (image != null) "image": kIsWeb ? MultipartFile.fromBytes(image, filename: "upload_image.png", contentType: MediaType("image", "png")) : await MultipartFile.fromFile(image.path, filename: image.path.split("/").last)});
+    final formData = FormData.fromMap({
+      "post": MultipartFile.fromString(jsonEncode(postData),
+        contentType: MediaType.parse('application/json')
+      ),
+      if (image != null) "image": kIsWeb
+        ? MultipartFile.fromBytes(image, filename: "upload_image.png", contentType: MediaType("image", "png"))
+        : await MultipartFile.fromFile(image.path, filename: image.path.split("/").last)});
 
     // Add interceptor to see the actual request
     dio.interceptors.add(LogInterceptor(requestBody: true, responseBody: true, requestHeader: true));

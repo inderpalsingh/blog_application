@@ -1,6 +1,5 @@
 import 'package:blog_application/src/config/env.dart';
 import 'package:blog_application/src/core/errors/exceptions.dart';
-import 'package:blog_application/src/features/auth/data/models/auth_response_model.dart';
 import 'package:blog_application/src/features/auth/data/models/refresh_token_response.dart';
 import 'package:dio/dio.dart';
 import '../models/auth_response.dart';

@@ -28,13 +28,13 @@ class PostRepositoryImpl implements PostRepository {
   }
 
   @override
-  Future<Either<Failure, void>> addPost({required PostEntity post, required image, required String token}) async {
+  Future<Either<Failure, void>> addPost({required PostEntity post, required image}) async {
     try {
       // Convert PostEntity to PostModel
       await remoteDataSource.createPost(
         post: post as PostModel, // or convert to PostModel
         image: image,
-        token: token
+
       );
       return const Right(null);
     } on ServerException catch (e) {

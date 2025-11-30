@@ -12,8 +12,8 @@ class AddPostUseCase {
   Future<Either<Failure, void>> call({
     required PostEntity post,
     required dynamic image,
-    required String token,
+
   }) async {
-    return await repository.addPost(post: post, image: image, token: token);
+    return await repository.addPost(post: post, image: image);
   }
 }
