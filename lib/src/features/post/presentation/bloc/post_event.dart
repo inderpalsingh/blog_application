@@ -35,11 +35,11 @@ class UpdatePostEvent extends PostEvent { // Add this event
     required this.postId,
     required this.post,
     required this.image,
-    required this.token, List<int>? imageBytes, required String fileName,
+    required this.token
   });
 
   @override
-  List<Object> get props => [postId, post, token];
+  List<Object> get props => [postId, post, token, image ?? ''];
 }
 
 

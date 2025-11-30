@@ -14,11 +14,10 @@ class PostRemoteDataSource {
   final LocalStorage localStorage;
   final AuthRepository authRepository;
 
-  PostRemoteDataSource(this.dio,this.localStorage,this.authRepository);
+  PostRemoteDataSource(this.dio, this.localStorage, this.authRepository);
 
   Future<List<PostEntity>> getPosts() async {
     try {
-
       // Use getValidToken from AuthRepository
       final token = await authRepository.getValidToken();
 
@@ -26,7 +25,9 @@ class PostRemoteDataSource {
         throw AuthException(message: 'No valid token available. Please login again.');
       }
 
-      final response = await dio.get(Env.baseUrlPosts,queryParameters: {'pageNumber': 0, 'pageSize': 10, 'sortBy': 'postId', 'sortDir': 'asc'},
+      final response = await dio.get(
+        Env.baseUrlPosts,
+        queryParameters: {'pageNumber': 0, 'pageSize': 10, 'sortBy': 'postId', 'sortDir': 'asc'},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       print("POSTS URL = ${Env.baseUrlPosts}");
@@ -40,16 +41,14 @@ class PostRemoteDataSource {
   }
 
   Future<void> createPost({required PostModel post, required dynamic image}) async {
-
     final url = "${Env.baseUrlPosts}/user/${post.user.id}/category/${post.category?.categoryId}/post";
 
-     // Use getValidToken instead of direct token
+    // Use getValidToken instead of direct token
     final token = await authRepository.getValidToken();
 
     if (token == null) {
       throw AuthException(message: 'No valid token available. Please login again.');
     }
-
 
     print("UPLOAD URL = $url");
     print("POST DATA: title=${post.title}, content=${post.content}");
@@ -59,13 +58,7 @@ class PostRemoteDataSource {
 
     final postData = {"title": post.title, "content": post.content};
 
-    final formData = FormData.fromMap({
-      "post": MultipartFile.fromString(jsonEncode(postData),
-        contentType: MediaType.parse('application/json')
-      ),
-      if (image != null) "image": kIsWeb
-        ? MultipartFile.fromBytes(image, filename: "upload_image.png", contentType: MediaType("image", "png"))
-        : await MultipartFile.fromFile(image.path, filename: image.path.split("/").last)});
+    final formData = FormData.fromMap({"post": MultipartFile.fromString(jsonEncode(postData), contentType: MediaType.parse('application/json')), if (image != null) "image": kIsWeb ? MultipartFile.fromBytes(image, filename: "upload_image.png", contentType: MediaType("image", "png")) : await MultipartFile.fromFile(image.path, filename: image.path.split("/").last)});
 
     // Add interceptor to see the actual request
     dio.interceptors.add(LogInterceptor(requestBody: true, responseBody: true, requestHeader: true));
@@ -112,135 +105,94 @@ class PostRemoteDataSource {
   }
 
   Future<PostEntity> updatePost({required int postId, required PostModel post, required dynamic image}) async {
-  final url = "${Env.baseUrlPosts}/$postId";
+    final url = "${Env.baseUrlPosts}/$postId";
 
-  // Use your existing getValidToken method from AuthRepository
-  final token = await authRepository.getValidToken();
+    // Use your existing getValidToken method from AuthRepository
+    final token = await authRepository.getValidToken();
 
-  if (token == null) {
-    throw AuthException(message: 'No authentication token found. Please login again.');
-  }
+    if (token == null) {
+      throw AuthException(message: 'No authentication token found. Please login again.');
+    }
 
-  // Debug: Print what we're sending
-  print("🔄 UPDATE POST URL = $url");
-  print("UPDATE POST DATA: title=${post.title}, content=${post.content}");
-  print("POST ID: $postId");
-  print("TOKEN: $token"); // Add this to verify token is present
+    // Debug: Print what we're sending
+    print("🔄 UPDATE POST URL = $url");
+    print("UPDATE POST DATA: title=${post.title}, content=${post.content}");
+    print("POST ID: $postId");
+    print("HAS IMAGE: ${image != null}");
+    print("TOKEN PREVIEW: ${token.substring(0, 20)}...");
 
-  try {
-    // First approach: Try with JSON body (without image)
-    if (image == null) {
-      // If no image, send as JSON
+    try {
+      // FIX: Always use JSON, ignore image for updates (backend limitation)
       final postData = {"title": post.title, "content": post.content};
 
       final response = await dio.put(
         url,
         data: postData,
-        options: Options(
-          headers: {
-            "Authorization": "Bearer $token",
-            "Content-Type": "application/json",
-          },
-        ),
+        options: Options(headers: {"Authorization": "Bearer $token", "Content-Type": "application/json"}),
       );
 
-      print("✅ POST UPDATED SUCCESSFULLY (JSON): ${response.data}");
-      return PostModel.fromJson(response.data);
-    } else {
-      // If there's an image, we need to handle it differently
-      // Option 1: Use PATCH instead of PUT
-      return await _updatePostWithImage(url, postId, post, image, token);
-    }
-  } on DioException catch (e) {
-    print("❌ UPDATE POST ERROR = $e");
-    if (e.response != null) {
-      print("STATUS: ${e.response!.statusCode}");
-      print("RESPONSE DATA: ${e.response!.data}");
-    }
+      print("✅ POST UPDATED SUCCESSFULLY: ${response.data}");
 
-    // Handle 401 specifically
-    if (e.response?.statusCode == 401) {
-      throw AuthException(message: 'Authentication failed. Please login again.');
-    }
-
-    throw ServerException(message: e.response?.data["message"] ?? "Failed to update post");
-  }
-}
-
-  // Helper method for updating post with image - also return PostEntity
-  Future<PostEntity> _updatePostWithImage(String url,int postId,PostModel post,dynamic image,String token) async {
-    try {
-      // Try PATCH request first
-      final postData = {"title": post.title, "content": post.content};
-
-      final formData = FormData.fromMap({"post": MultipartFile.fromString(jsonEncode(postData), contentType: MediaType.parse('application/json')), if (image != null) "image": kIsWeb ? MultipartFile.fromBytes(image, filename: "update_image.png", contentType: MediaType("image", "png")) : await MultipartFile.fromFile(image.path, filename: image.path.split("/").last)});
-
-      final response = await dio.patch(
-        url,
-        data: formData,
-        options: Options(headers: {"Authorization": "Bearer $token"}),
-      );
-
-      print("✅ POST UPDATED SUCCESSFULLY (PATCH): ${response.data}");
-      return PostModel.fromJson(response.data); // RETURN
-    } on DioException catch (e) {
-      // If PATCH fails, try separate calls
-      if (e.response?.statusCode == 405 || e.response?.statusCode == 415) {
-        print("🔄 PATCH not supported, trying separate update calls...");
-        return await _updatePostSeparateCalls(url, postId, post, image, token); // RETURN
-      } else {
-        rethrow;
+      if (image != null && image is Uint8List) {
+      try {
+        await _updatePostImage(postId, post, image, token);
+        print("✅ POST IMAGE UPDATED SUCCESSFULLY");
+      } catch (e) {
+        print("⚠️ Image update failed, but text was updated: $e");
+        // Don't throw - text was updated successfully
       }
     }
-  }
 
-  // Update post and image separately - return PostEntity
-  Future<PostEntity> _updatePostSeparateCalls(
-    // Change return type
-    String url,
-    int postId,
-    PostModel post,
-    dynamic image,
-    String token,
-  ) async {
-    // First update the post text content
-    final postData = {"title": post.title, "content": post.content};
-
-    final updateResponse = await dio.put(
-      url,
-      data: postData,
-      options: Options(headers: {"Authorization": "Bearer $token", "Content-Type": "application/json"}),
-    );
-
-    print("✅ POST CONTENT UPDATED: ${updateResponse.data}");
-
-    // Then update the image separately if provided
-    if (image != null) {
-      await _updatePostImageOnly(url, postId, image, token);
-    }
-
-    return PostModel.fromJson(updateResponse.data); // RETURN the updated post
-  }
-
-  Future<void> _updatePostImageOnly(String url, int postId, dynamic image, String token) async {
-    final imageUrl = "$url/image"; // Try common endpoint for image update
-    // Or use the same URL with different method
-    // final imageUrl = url;
-
-    try {
-      final formData = FormData.fromMap({"image": kIsWeb ? MultipartFile.fromBytes(image, filename: "update_image.png", contentType: MediaType("image", "png")) : await MultipartFile.fromFile(image.path, filename: image.path.split("/").last)});
-
-      final response = await dio.patch(
-        // Try PATCH for image
-        imageUrl,
-        data: formData,
-        options: Options(headers: {"Authorization": "Bearer $token"}),
-      );
-
-      print("✅ POST IMAGE UPDATED: ${response.data}");
+      return PostModel.fromJson(response.data);
     } on DioException catch (e) {
-      print("⚠️ Could not update image: $e");
-      // Continue without throwing - the text content was updated successfully
+      print("❌ UPDATE POST ERROR = $e");
+      if (e.response != null) {
+        print("STATUS: ${e.response!.statusCode}");
+        print("RESPONSE DATA: ${e.response!.data}");
+      }
+
+      // Handle 401 specifically
+      if (e.response?.statusCode == 401) {
+        throw AuthException(message: 'Authentication failed. Please login again.');
+      }
+
+      throw ServerException(message: e.response?.data["message"] ?? "Failed to update post");
     }
   }
+
+  Future<void> _updatePostImage(int postId, PostModel post, Uint8List imageBytes, String token) async {
+  // Use the same endpoint as creating posts, but with the existing post ID
+  final url = "${Env.baseUrlPosts}/user/${post.user.id}/category/${post.category?.categoryId}/post";
+
+  print("🔄 UPDATING POST IMAGE URL = $url");
+
+  final postData = {
+    "title": post.title,
+    "content": post.content
+  };
+
+  final formData = FormData.fromMap({
+    "post": MultipartFile.fromString(
+      jsonEncode(postData),
+      contentType: MediaType.parse('application/json')
+    ),
+    "image": MultipartFile.fromBytes(
+      imageBytes,
+      filename: "update_image.png",
+      contentType: MediaType("image", "png")
+    )
+  });
+
+  // Use POST to update the image (same as create endpoint)
+  final response = await dio.post(
+    url,
+    data: formData,
+    options: Options(headers: {"Authorization": "Bearer $token"}),
+  );
+
+  print("✅ POST IMAGE UPDATED: ${response.data}");
+}
+
+
+
 }
