@@ -160,11 +160,9 @@ class _EditPostPageState extends State<EditPostPage> {
         }
       }
 
-      // ✅ FIX: Don't print full token to avoid overflow
-      print("🔄 UPDATE POST URL = http://192.168.1.200:10000/api/posts/${widget.postId}");
-      print("UPDATE POST DATA: title=${_titleController.text}, content=${_contentController.text}");
-      print("POST ID: ${widget.postId}");
-      print("TOKEN PREVIEW: ${widget.token.substring(0, 20)}...");
+      if (_removeCurrentImage) {
+        imageToSend = null; // This will preserve the existing image in backend
+      }
 
       context.read<PostBloc>().add(UpdatePostEvent(
         postId: widget.postId,

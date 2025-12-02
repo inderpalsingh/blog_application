@@ -106,93 +106,67 @@ class PostRemoteDataSource {
 
   Future<PostEntity> updatePost({required int postId, required PostModel post, required dynamic image}) async {
     final url = "${Env.baseUrlPosts}/$postId";
-
-    // Use your existing getValidToken method from AuthRepository
     final token = await authRepository.getValidToken();
 
     if (token == null) {
       throw AuthException(message: 'No authentication token found. Please login again.');
     }
 
-    // Debug: Print what we're sending
-    print("🔄 UPDATE POST URL = $url");
-    print("UPDATE POST DATA: title=${post.title}, content=${post.content}");
-    print("POST ID: $postId");
-    print("HAS IMAGE: ${image != null}");
-    print("TOKEN PREVIEW: ${token.substring(0, 20)}...");
+    print("🔄 UPDATE POST - ID: $postId, Title: ${post.title}, Has Image: ${image != null}");
 
     try {
-      // FIX: Always use JSON, ignore image for updates (backend limitation)
-      final postData = {"title": post.title, "content": post.content};
+      // Create FormData for multipart request
+      FormData formData = FormData.fromMap({
+        // This must be a JSON string with key "post" (matching @RequestPart("post"))
+        'post': jsonEncode({'title': post.title, 'content': post.content}),
+      });
 
+      // Add image if provided
+      if (image != null && image is Uint8List) {
+        formData.files.add(
+          MapEntry(
+            'image', // This must match @RequestPart("image")
+            MultipartFile.fromBytes(image, filename: 'post_image_${DateTime.now().millisecondsSinceEpoch}.png'),
+          ),
+        );
+      }
+
+      // Send the multipart PUT request
       final response = await dio.put(
         url,
-        data: postData,
-        options: Options(headers: {"Authorization": "Bearer $token", "Content-Type": "application/json"}),
+        data: formData,
+        options: Options(
+          headers: {
+            "Authorization": "Bearer $token",
+            // DO NOT set Content-Type header - Dio will automatically set it to multipart/form-data
+          },
+        ),
       );
 
       print("✅ POST UPDATED SUCCESSFULLY: ${response.data}");
-
-      if (image != null && image is Uint8List) {
-      try {
-        await _updatePostImage(postId, post, image, token);
-        print("✅ POST IMAGE UPDATED SUCCESSFULLY");
-      } catch (e) {
-        print("⚠️ Image update failed, but text was updated: $e");
-        // Don't throw - text was updated successfully
-      }
-    }
-
       return PostModel.fromJson(response.data);
     } on DioException catch (e) {
       print("❌ UPDATE POST ERROR = $e");
       if (e.response != null) {
         print("STATUS: ${e.response!.statusCode}");
         print("RESPONSE DATA: ${e.response!.data}");
+        print("REQUEST HEADERS: ${e.requestOptions.headers}");
+        print("REQUEST DATA TYPE: ${e.requestOptions.data.runtimeType}");
+
+        // Debug: Print what we're actually sending
+        if (e.requestOptions.data is FormData) {
+          FormData fd = e.requestOptions.data as FormData;
+          print("FormData fields: ${fd.fields}");
+          print("FormData files: ${fd.files.length}");
+        }
       }
 
-      // Handle 401 specifically
       if (e.response?.statusCode == 401) {
         throw AuthException(message: 'Authentication failed. Please login again.');
       }
 
-      throw ServerException(message: e.response?.data["message"] ?? "Failed to update post");
+      throw ServerException(message: e.response?.data["message"] ?? "Failed to update post: ${e.message}");
     }
   }
-
-  Future<void> _updatePostImage(int postId, PostModel post, Uint8List imageBytes, String token) async {
-  // Use the same endpoint as creating posts, but with the existing post ID
-  final url = "${Env.baseUrlPosts}/user/${post.user.id}/category/${post.category?.categoryId}/post";
-
-  print("🔄 UPDATING POST IMAGE URL = $url");
-
-  final postData = {
-    "title": post.title,
-    "content": post.content
-  };
-
-  final formData = FormData.fromMap({
-    "post": MultipartFile.fromString(
-      jsonEncode(postData),
-      contentType: MediaType.parse('application/json')
-    ),
-    "image": MultipartFile.fromBytes(
-      imageBytes,
-      filename: "update_image.png",
-      contentType: MediaType("image", "png")
-    )
-  });
-
-  // Use POST to update the image (same as create endpoint)
-  final response = await dio.post(
-    url,
-    data: formData,
-    options: Options(headers: {"Authorization": "Bearer $token"}),
-  );
-
-  print("✅ POST IMAGE UPDATED: ${response.data}");
-}
-
-
 
 }
