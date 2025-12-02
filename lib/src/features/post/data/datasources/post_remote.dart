@@ -84,10 +84,20 @@ class PostRemoteDataSource {
   Future<void> deletePost({required String token, required int postId}) async {
     final url = "${Env.baseUrlPosts}/$postId";
     print("DELETE URL = $url");
+
+
+    final token = await authRepository.getValidToken();
     print("TOKEN BEING SENT: $token");
 
+
+    if (token == null) {
+      throw AuthException(message: 'No authentication token found. Please login again.');
+    }
+
     try {
-      final response = await dio.delete(url, options: Options(headers: {"Authorization": "Bearer $token"}));
+      final response = await dio.delete(url, options: Options(
+        headers: {"Authorization": "Bearer $token"}
+        ));
       if (response.statusCode == 200 || response.statusCode == 204) {
         print("POST DELETED SUCCESSFULLY");
       } else {
